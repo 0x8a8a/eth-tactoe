@@ -13,6 +13,7 @@ contract TicTacToeBaseTest is Test {
     uint256 public bobPk;
 
     TicTacToe public tictactoe;
+    bytes32 public domainSeparator;
 
     constructor() {
         (alice, alicePk) = makeAddrAndKey("alice");
@@ -21,5 +22,17 @@ contract TicTacToeBaseTest is Test {
 
     function setUp() public {
         tictactoe = new TicTacToe();
+
+        (, string memory name, string memory version, uint256 chainId, address verifyingContract,,) =
+            tictactoe.eip712Domain();
+        domainSeparator = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes(version)),
+                chainId,
+                verifyingContract
+            )
+        );
     }
 }
