@@ -39,6 +39,7 @@ contract TicTacToeOpenTest is TicTacToeBaseTest {
     }
 
     function testFuzz_RevertsIf_SignatureHasExpired(uint256 deadline) public {
+        vm.warp(2147483647);
         deadline = bound(deadline, 0, block.timestamp - 1);
 
         vm.expectRevert(abi.encodeWithSelector(ExpiredSignature.selector, deadline));
