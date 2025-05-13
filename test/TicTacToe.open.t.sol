@@ -1,17 +1,33 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.29;
 
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import {TicTacToeBaseTest} from "test/TicTacToe.t.sol";
 
 import {LibSigUtils} from "src/LibSigUtils.sol";
 
 contract TicTacToeOpenTest is TicTacToeBaseTest {
     using LibSigUtils for *;
+    using SafeCast for *;
+
+    event Opened(address indexed alice, address indexed bob, uint256 indexed id, uint32 expiry, uint8 timeout);
 
     error UnauthorizedCaller(address caller);
     error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
     error UnauthorizedSigner(address signer);
+
+    function test_EmitsOpenedEvent() public {
+        bytes32 structHash = LibSigUtils.Open(LibSigUtils.Channel(alice, bob, 0), UINT256_MAX, 60).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(alicePk, toTypedDataHash(structHash));
+
+        vm.expectEmit();
+        emit Opened(alice, bob, 0, (block.timestamp + 60).toUint32(), 60);
+
+        vm.prank(bob);
+        tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+    }
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
