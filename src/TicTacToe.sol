@@ -6,10 +6,13 @@ import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
 contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error UnauthorizedCaller(address caller);
+    error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
 
     function open(address alice, address bob, uint256 deadline, uint8 timeout, bytes32 r, bytes32 vs) external {
         require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
+        // slither-disable-next-line timestamp
+        require(block.timestamp <= deadline, ExpiredSignature(deadline));
         require(timeout >= 60, InvalidTimeout(timeout));
     }
 }
