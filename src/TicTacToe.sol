@@ -20,6 +20,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
     error UnauthorizedSigner(address signer);
+    error MissingChannel(address alice, address bob, uint256 id);
+
+    modifier checkExistence(address alice, address bob, uint256 id) {
+        require(id < nonces[alice][bob], MissingChannel(alice, bob, id));
+        _;
+    }
 
     function open(address alice, address bob, uint256 deadline, uint8 timeout, bytes32 r, bytes32 vs) external {
         require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
@@ -35,7 +41,17 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Opened(alice, bob, id, (block.timestamp + timeout).toUint32(), timeout);
     }
 
-    function getExpiry(address alice, address bob, uint256 id) external view returns (uint32) {}
+    function getExpiry(address alice, address bob, uint256 id)
+        external
+        view
+        checkExistence(alice, bob, id)
+        returns (uint32)
+    {}
 
-    function getTimeout(address alice, address bob, uint256 id) external view returns (uint8) {}
+    function getTimeout(address alice, address bob, uint256 id)
+        external
+        view
+        checkExistence(alice, bob, id)
+        returns (uint8)
+    {}
 }
