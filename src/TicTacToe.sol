@@ -12,7 +12,13 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     using LibSigUtils for *;
     using SafeCast for *;
 
+    struct Channel {
+        uint32 expiry;
+        uint8 timeout;
+    }
+
     mapping(address alice => mapping(address bob => uint256)) public nonces;
+    mapping(address alice => mapping(address bob => mapping(uint256 id => Channel))) public channels;
 
     event Opened(address indexed alice, address indexed bob, uint256 indexed id, uint32 expiry, uint8 timeout);
 
@@ -38,7 +44,10 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
-        emit Opened(alice, bob, id, (block.timestamp + timeout).toUint32(), timeout);
+        uint32 expiry = (block.timestamp + timeout).toUint32();
+
+        channels[alice][bob][id] = Channel(expiry, timeout);
+        emit Opened(alice, bob, id, expiry, timeout);
     }
 
     function getExpiry(address alice, address bob, uint256 id)
@@ -46,12 +55,16 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         view
         checkExistence(alice, bob, id)
         returns (uint32)
-    {}
+    {
+        return channels[alice][bob][id].expiry;
+    }
 
     function getTimeout(address alice, address bob, uint256 id)
         external
         view
         checkExistence(alice, bob, id)
         returns (uint8)
-    {}
+    {
+        return channels[alice][bob][id].timeout;
+    }
 }
