@@ -3,10 +3,15 @@ pragma solidity 0.8.29;
 
 import {TicTacToeBaseTest} from "test/TicTacToe.t.sol";
 
+import {LibSigUtils} from "src/LibSigUtils.sol";
+
 contract TicTacToeOpenTest is TicTacToeBaseTest {
+    using LibSigUtils for *;
+
     error UnauthorizedCaller(address caller);
     error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
+    error UnauthorizedSigner(address signer);
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
@@ -33,5 +38,17 @@ contract TicTacToeOpenTest is TicTacToeBaseTest {
             vm.prank(alice);
             tictactoe.open(alice, bob, UINT256_MAX, timeout, bytes32(0), bytes32(0));
         }
+    }
+
+    function test_RevertsIf_SignerIsUnauthorized(uint256 signerPk) public {
+        vm.assume((signerPk = boundPrivateKey(signerPk)) != alicePk);
+
+        bytes32 structHash = LibSigUtils.Open(LibSigUtils.Channel(alice, bob, 0), UINT256_MAX, 60).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(signerPk, toTypedDataHash(structHash));
+
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedSigner.selector, vm.addr(signerPk)));
+
+        vm.prank(bob);
+        tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
     }
 }
