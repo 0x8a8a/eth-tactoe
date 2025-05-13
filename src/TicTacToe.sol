@@ -34,4 +34,8 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
 
         emit Opened(alice, bob, id, (block.timestamp + timeout).toUint32(), timeout);
     }
+
+    function getExpiry(address alice, address bob, uint256 id) external view returns (uint32) {}
+
+    function getTimeout(address alice, address bob, uint256 id) external view returns (uint8) {}
 }
