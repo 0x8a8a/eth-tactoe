@@ -29,6 +29,18 @@ contract TicTacToeOpenTest is TicTacToeBaseTest {
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
     }
 
+    function test_StateUpdates() public {
+        bytes32 structHash = LibSigUtils.Open(LibSigUtils.Channel(alice, bob, 0), UINT256_MAX, 60).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(alicePk, toTypedDataHash(structHash));
+
+        vm.prank(bob);
+        tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+
+        assertEq(tictactoe.nonces(alice, bob), 1);
+        assertEq(tictactoe.getExpiry(alice, bob, 0), block.timestamp + 60);
+        assertEq(tictactoe.getTimeout(alice, bob, 0), 60);
+    }
+
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
 
