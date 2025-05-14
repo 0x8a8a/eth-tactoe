@@ -28,13 +28,20 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error UnauthorizedSigner(address signer);
     error MissingChannel(address alice, address bob, uint256 id);
 
+    modifier onlyParticipants(address alice, address bob) {
+        require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
+        _;
+    }
+
     modifier checkExistence(address alice, address bob, uint256 id) {
         require(id < nonces[alice][bob], MissingChannel(alice, bob, id));
         _;
     }
 
-    function open(address alice, address bob, uint256 deadline, uint8 timeout, bytes32 r, bytes32 vs) external {
-        require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
+    function open(address alice, address bob, uint256 deadline, uint8 timeout, bytes32 r, bytes32 vs)
+        external
+        onlyParticipants(alice, bob)
+    {
         // slither-disable-next-line timestamp
         require(block.timestamp <= deadline, ExpiredSignature(deadline));
         require(timeout >= 60, InvalidTimeout(timeout));
