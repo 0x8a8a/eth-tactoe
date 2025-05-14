@@ -22,7 +22,7 @@ abstract contract TicTacToeBaseTest is Test {
         (bob, bobPk) = makeAddrAndKey("bob");
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         tictactoe = new TicTacToe();
 
         (, string memory name, string memory version, uint256 chainId, address verifyingContract,,) =
