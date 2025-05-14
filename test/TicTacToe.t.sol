@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {TicTacToe} from "src/TicTacToe.sol";
 
-contract TicTacToeBaseTest is Test {
+abstract contract TicTacToeBaseTest is Test {
     address public alice;
     uint256 public alicePk;
 
