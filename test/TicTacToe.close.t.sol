@@ -9,6 +9,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
     error UnauthorizedCaller(address caller);
+    error MissingChannel(address alice, address bob, uint256 id);
 
     function setUp() public override {
         super.setUp();
@@ -27,5 +28,12 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
 
         vm.prank(caller);
         tictactoe.close(alice, bob, 0, address(0), bytes32(0), bytes32(0));
+    }
+
+    function test_RevertsIf_ChannelIsNonexistent() public {
+        vm.expectRevert(abi.encodeWithSelector(MissingChannel.selector, alice, bob, 1));
+
+        vm.prank(alice);
+        tictactoe.close(alice, bob, 1, address(0), bytes32(0), bytes32(0));
     }
 }
