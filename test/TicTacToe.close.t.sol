@@ -11,6 +11,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
     error UnauthorizedCaller(address caller);
     error MissingChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
+    error InvalidWinner(address winner);
 
     function setUp() public override {
         super.setUp();
@@ -36,6 +37,15 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.close(alice, bob, 1, address(0), bytes32(0), bytes32(0));
+    }
+
+    function testFuzz_RevertsIf_InvalidWinnerArgumentIsGiven(address winner) public {
+        vm.assume(winner != alice && winner != bob && winner != address(0));
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidWinner.selector, winner));
+
+        vm.prank(alice);
+        tictactoe.close(alice, bob, 0, winner, bytes32(0), bytes32(0));
     }
 
     function test_RevertsIf_ChannelIsExpired() public {
