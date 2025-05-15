@@ -21,6 +21,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     mapping(address alice => mapping(address bob => mapping(uint256 id => Channel))) public channels;
 
     event Opened(address indexed alice, address indexed bob, uint256 indexed id, uint32 expiry, uint8 timeout);
+    event Closed(address indexed alice, address indexed bob, uint256 indexed id, address winner);
 
     error UnauthorizedCaller(address caller);
     error ExpiredSignature(uint256 deadline);
@@ -73,6 +74,8 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, id), winner).hash();
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
+
+        emit Closed(alice, bob, id, winner);
     }
 
     function getExpiry(address alice, address bob, uint256 id)
