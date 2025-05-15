@@ -12,6 +12,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
     error MissingChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
     error InvalidWinner(address winner);
+    error UnauthorizedSigner(address signer);
 
     function setUp() public override {
         super.setUp();
@@ -56,5 +57,17 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
 
         vm.prank(bob);
         tictactoe.close(alice, bob, 0, address(0), bytes32(0), bytes32(0));
+    }
+
+    function test_RevertsIf_SignerIsUnauthorized(uint256 signerPk) public {
+        vm.assume((signerPk = boundPrivateKey(signerPk)) != alicePk);
+
+        bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, 0), bob).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(signerPk, toTypedDataHash(structHash));
+
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedSigner.selector, vm.addr(signerPk)));
+
+        vm.prank(bob);
+        tictactoe.close(alice, bob, 0, bob, r, vs);
     }
 }
