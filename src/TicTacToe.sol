@@ -64,11 +64,15 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         onlyParticipants(alice, bob)
         checkExistence(alice, bob, id)
     {
-        require(winner == address(0) || winner == alice || winner == bob, InvalidWinner(winner));
-
         Channel memory channel = channels[alice][bob][id];
         // slither-disable-next-line timestamp
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
+
+        require(winner == address(0) || winner == alice || winner == bob, InvalidWinner(winner));
+
+        bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, id), winner).hash();
+        address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
+        require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
     }
 
     function getExpiry(address alice, address bob, uint256 id)
