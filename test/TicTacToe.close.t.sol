@@ -8,6 +8,8 @@ import {LibSigUtils} from "src/LibSigUtils.sol";
 contract TicTacToeCloseTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
+    event Closed(address indexed alice, address indexed bob, uint256 indexed id, address winner);
+
     error UnauthorizedCaller(address caller);
     error MissingChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
@@ -22,6 +24,17 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+    }
+
+    function test_EmitsClosedEvent() public {
+        bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, 0), alice).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(bobPk, toTypedDataHash(structHash));
+
+        vm.expectEmit();
+        emit Closed(alice, bob, 0, alice);
+
+        vm.prank(alice);
+        tictactoe.close(alice, bob, 0, alice, r, vs);
     }
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
