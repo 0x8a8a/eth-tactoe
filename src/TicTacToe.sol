@@ -33,6 +33,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error ExpiredChannel(uint32 expiry);
     error InvalidWinner(address winner);
     error LiveChannel(uint32 expiry);
+    error InvalidNonce(uint184 nonce);
 
     modifier onlyParticipants(address alice, address bob) {
         require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
@@ -90,7 +91,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         external
         onlyParticipants(alice, bob)
         checkExistence(alice, bob, id)
-    {}
+    {
+        Channel memory channel = channels[alice][bob][id];
+        // slither-disable-next-line timestamp
+        require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
+        require(nonce >= channel.nonce, InvalidNonce(nonce));
+    }
 
     function getExpiry(address alice, address bob, uint256 id)
         external
