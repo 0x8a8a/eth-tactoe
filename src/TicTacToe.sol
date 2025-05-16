@@ -14,6 +14,8 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
 
     struct Channel {
         uint32 expiry;
+        uint184 nonce;
+        uint32 states;
         uint8 timeout;
     }
 
@@ -57,7 +59,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
 
         uint32 expiry = (block.timestamp + timeout).toUint32();
 
-        channels[alice][bob][id] = Channel(expiry, timeout);
+        channels[alice][bob][id] = Channel(expiry, 0, 0, timeout);
         emit Opened(alice, bob, id, expiry, timeout);
     }
 
