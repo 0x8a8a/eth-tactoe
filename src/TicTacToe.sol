@@ -86,6 +86,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Closed(alice, bob, id, winner);
     }
 
+    function commit(address alice, address bob, uint256 id, uint184 nonce, uint32 states, bytes32 r, bytes32 vs)
+        external
+        onlyParticipants(alice, bob)
+        checkExistence(alice, bob, id)
+    {}
+
     function getExpiry(address alice, address bob, uint256 id)
         external
         view
