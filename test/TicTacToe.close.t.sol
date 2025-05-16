@@ -37,6 +37,24 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
         tictactoe.close(alice, bob, 0, alice, r, vs);
     }
 
+    function test_StateUpdates() public {
+        address[3] memory winners = [alice, bob, address(0)];
+        for (uint256 i = 0; i < 3; i++) {
+            uint256 snapshotId = vm.snapshotState();
+
+            bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, 0), winners[i]).hash();
+            (bytes32 r, bytes32 vs) = vm.signCompact(bobPk, toTypedDataHash(structHash));
+
+            vm.prank(alice);
+            tictactoe.close(alice, bob, 0, winners[i], r, vs);
+
+            assertEq(tictactoe.getExpiry(alice, bob, 0), 0);
+            // assertEq(tictactoe.getWinner(alice, bob, 0), winners[i]);
+
+            vm.revertToStateAndDelete(snapshotId);
+        }
+    }
+
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
 
