@@ -49,7 +49,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
             tictactoe.close(alice, bob, 0, winners[i], r, vs);
 
             assertEq(tictactoe.getExpiry(alice, bob, 0), 0);
-            // assertEq(tictactoe.getWinner(alice, bob, 0), winners[i]);
+            assertEq(tictactoe.getWinner(alice, bob, 0), winners[i]);
 
             vm.revertToStateAndDelete(snapshotId);
         }
