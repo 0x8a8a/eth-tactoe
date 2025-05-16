@@ -75,6 +75,9 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
+        channel.expiry = 0;
+
+        channels[alice][bob][id] = channel;
         emit Closed(alice, bob, id, winner);
     }
 
