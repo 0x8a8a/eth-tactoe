@@ -78,7 +78,9 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
-        channel.expiry = 0;
+        (channel.expiry, channel.states) = (0, 0);
+        if (winner == alice) channel.states = 0x01ff0000;
+        if (winner == bob) channel.states = 0x01ff;
 
         channels[alice][bob][id] = channel;
         emit Closed(alice, bob, id, winner);
@@ -111,6 +113,10 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         Channel memory channel = channels[alice][bob][id];
         // slither-disable-next-line timestamp
         require(channel.expiry < block.timestamp, LiveChannel(channel.expiry));
+
+        if (channel.states == 0) return address(0);
+        if (channel.states == 0x01ff0000) return alice;
+        if (channel.states == 0x01ff) return bob;
 
         return address(0);
     }
