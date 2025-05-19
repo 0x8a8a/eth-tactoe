@@ -29,7 +29,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
     error UnauthorizedSigner(address signer);
-    error MissingChannel(address alice, address bob, uint256 id);
+    error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
     error InvalidWinner(address winner);
     error LiveChannel(uint32 expiry);
@@ -41,7 +41,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     }
 
     modifier checkExistence(address alice, address bob, uint256 id) {
-        require(id < nonces[alice][bob], MissingChannel(alice, bob, id));
+        require(id < nonces[alice][bob], InvalidChannel(alice, bob, id));
         _;
     }
 

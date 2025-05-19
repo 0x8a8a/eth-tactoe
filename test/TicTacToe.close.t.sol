@@ -11,7 +11,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
     event Closed(address indexed alice, address indexed bob, uint256 indexed id, address winner);
 
     error UnauthorizedCaller(address caller);
-    error MissingChannel(address alice, address bob, uint256 id);
+    error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
     error InvalidWinner(address winner);
     error UnauthorizedSigner(address signer);
@@ -65,7 +65,7 @@ contract TicTacToeCloseTest is TicTacToeBaseTest {
     }
 
     function test_RevertsIf_ChannelIsNonexistent() public {
-        vm.expectRevert(abi.encodeWithSelector(MissingChannel.selector, alice, bob, 1));
+        vm.expectRevert(abi.encodeWithSelector(InvalidChannel.selector, alice, bob, 1));
 
         vm.prank(alice);
         tictactoe.close(alice, bob, 1, address(0), bytes32(0), bytes32(0));

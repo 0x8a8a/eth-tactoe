@@ -9,7 +9,7 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
     error UnauthorizedCaller(address caller);
-    error MissingChannel(address alice, address bob, uint256 id);
+    error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
 
     function setUp() public override {
@@ -32,7 +32,7 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
     }
 
     function test_RevertsIf_ChannelIsNonexistent() public {
-        vm.expectRevert(abi.encodeWithSelector(MissingChannel.selector, alice, bob, 1));
+        vm.expectRevert(abi.encodeWithSelector(InvalidChannel.selector, alice, bob, 1));
 
         vm.prank(alice);
         tictactoe.commit(alice, bob, 1, 0, 0, bytes32(0), bytes32(0));
