@@ -9,6 +9,7 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
     error UnauthorizedCaller(address caller);
+    error MissingChannel(address alice, address bob, uint256 id);
 
     function setUp() public override {
         super.setUp();
@@ -27,5 +28,12 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
 
         vm.prank(caller);
         tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
+    }
+
+    function test_RevertsIf_ChannelIsNonexistent() public {
+        vm.expectRevert(abi.encodeWithSelector(MissingChannel.selector, alice, bob, 1));
+
+        vm.prank(alice);
+        tictactoe.commit(alice, bob, 1, 0, 0, bytes32(0), bytes32(0));
     }
 }
