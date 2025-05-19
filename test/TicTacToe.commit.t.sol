@@ -8,6 +8,8 @@ import {LibSigUtils} from "src/LibSigUtils.sol";
 contract TicTacToeCommitTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
+    error UnauthorizedCaller(address caller);
+
     function setUp() public override {
         super.setUp();
 
@@ -16,5 +18,14 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+    }
+
+    function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
+        vm.assume(caller != alice && caller != bob);
+
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedCaller.selector, caller));
+
+        vm.prank(caller);
+        tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
     }
 }
