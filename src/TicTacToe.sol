@@ -107,6 +107,15 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         return channels[alice][bob][id].expiry;
     }
 
+    function getNonce(address alice, address bob, uint256 id)
+        external
+        view
+        checkExistence(alice, bob, id)
+        returns (uint184)
+    {
+        return channels[alice][bob][id].nonce;
+    }
+
     function getTimeout(address alice, address bob, uint256 id)
         external
         view
