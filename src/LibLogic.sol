@@ -3,4 +3,6 @@ pragma solidity ^0.8.29;
 
 import {LibBit} from "solady/utils/LibBit.sol";
 
-library LibLogic {}
+library LibLogic {
+    function validate(uint256 nonce, uint256 alice, uint256 bob) internal {}
+}
