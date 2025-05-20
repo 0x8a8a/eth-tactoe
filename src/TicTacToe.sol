@@ -96,6 +96,10 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         // slither-disable-next-line timestamp
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
         require(nonce >= channel.nonce, InvalidNonce(nonce));
+
+        bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, id), nonce, states).hash();
+        address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
+        require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
     }
 
     function getExpiry(address alice, address bob, uint256 id)
