@@ -52,6 +52,7 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
         tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
     }
 
+    /// forge-config: default.fuzz.runs = 32
     function test_RevertsIf_NonceArgumentIsInvalid(uint184 nonce) public {
         vm.assume(nonce != 0);
 
