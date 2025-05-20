@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.29;
 
+import {StdStorage, stdStorage} from "forge-std/Test.sol";
+
 import {TicTacToeBaseTest} from "test/TicTacToe.t.sol";
 
 import {LibSigUtils} from "src/LibSigUtils.sol";
 
 contract TicTacToeCommitTest is TicTacToeBaseTest {
     using LibSigUtils for *;
+    using stdStorage for StdStorage;
 
     error UnauthorizedCaller(address caller);
     error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
+    error InvalidNonce(uint184 nonce);
 
     function setUp() public override {
         super.setUp();
@@ -45,6 +49,25 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
         vm.expectRevert(abi.encodeWithSelector(ExpiredChannel.selector, expiry));
 
         vm.prank(bob);
+        tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
+    }
+
+    function test_RevertsIf_NonceArgumentIsInvalid(uint184 nonce) public {
+        vm.assume(nonce != 0);
+
+        // forgefmt: disable-next-item
+        stdstore
+            .enable_packed_slots()
+            .target(address(tictactoe))
+            .sig("getNonce(address,address,uint256)")
+            .with_key(alice)
+            .with_key(bob)
+            .with_key(uint256(0))
+            .checked_write(nonce);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidNonce.selector, 0));
+
+        vm.prank(alice);
         tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
     }
 }
