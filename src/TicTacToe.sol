@@ -6,6 +6,7 @@ import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
+import {LibLogic} from "src/LibLogic.sol";
 import {LibSigUtils} from "src/LibSigUtils.sol";
 
 contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
@@ -97,6 +98,8 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         // slither-disable-next-line timestamp
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
         require(nonce >= channel.nonce, InvalidNonce(nonce));
+
+        LibLogic.validate(nonce, states >> 16, states & 0xffff);
 
         bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, id), nonce, states).hash();
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
