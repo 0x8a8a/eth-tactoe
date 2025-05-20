@@ -6,16 +6,17 @@ import {LibBit} from "solady/utils/LibBit.sol";
 library LibLogic {
     using LibBit for *;
 
+    error IndexError(uint256 state);
+
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
+        require(alice < 0x200, IndexError(alice));
+        require(bob < 0x200, IndexError(bob));
+
         uint256 turn = nonce % 10;
         if (turn == 0) {
             require(alice == 0 && bob == 0); // initial grid state
             return;
         }
-
-        // check individual states for validity
-        require(alice <= 0x1ff); // stay on the grid
-        require(bob <= 0x1ff); // stay on the grid
 
         // check the individuals number of moves
         uint256 alicePopCount = alice.popCount();
