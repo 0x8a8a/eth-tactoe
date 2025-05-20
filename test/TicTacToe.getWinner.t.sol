@@ -9,7 +9,7 @@ contract TicTacToeGetWinnerTest is TicTacToeBaseTest {
     using LibSigUtils for *;
 
     error InvalidChannel(address alice, address bob, uint256 id);
-    error LiveChannel(uint32 expiry);
+    error PendingExpiration(uint32 expiry);
 
     function test_RevertsIf_ChannelIsNonexistent() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidChannel.selector, alice, bob, 0));
@@ -23,7 +23,7 @@ contract TicTacToeGetWinnerTest is TicTacToeBaseTest {
         vm.prank(alice);
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
 
-        vm.expectRevert(abi.encodeWithSelector(LiveChannel.selector, tictactoe.getExpiry(alice, bob, 0)));
+        vm.expectRevert(abi.encodeWithSelector(PendingExpiration.selector, tictactoe.getExpiry(alice, bob, 0)));
         tictactoe.getWinner(alice, bob, 0);
     }
 }
