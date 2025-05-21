@@ -47,9 +47,13 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
         vm.prank(bob);
         tictactoe.commit(alice, bob, 0, 10, 0, r, vs);
 
-        assertEq(tictactoe.getExpiry(alice, bob, 0), block.timestamp + 60);
+        uint32 expiry = tictactoe.getExpiry(alice, bob, 0);
+        assertEq(expiry, block.timestamp + 60);
         assertEq(tictactoe.getNonce(alice, bob, 0), 10);
         assertEq(tictactoe.getTimeout(alice, bob, 0), 60); // timeout is unchanged
+
+        vm.warp(expiry + 1);
+        assertEq(tictactoe.getWinner(alice, bob, 0), address(0));
     }
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
