@@ -52,6 +52,12 @@ contract LibLogicTest is Test {
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
+    function test_validate_RevertsIf_AliceWonAndBobMovedAfter() public {
+        vm.expectRevert(abi.encodeWithSelector(LogicError.selector, 6));
+        LibLogic.validate(6, 0x38, 0x46);
+    }
+
+    /// forge-config: default.allow_internal_expect_revert = true
     /// forge-config: default.fuzz.runs = 16
     function test_toUint9_RevertsIf_ValueIsGreaterThan0x1ff(uint256 value) public {
         value = bound(value, 0x200, UINT256_MAX);
