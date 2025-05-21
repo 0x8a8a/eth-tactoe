@@ -9,23 +9,35 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibLogic} from "src/LibLogic.sol";
 import {LibSigUtils} from "src/LibSigUtils.sol";
 
+/// @title TicTacToe - A State Channel-based Tic-Tac-Toe Game
+/// @notice This contract enables players to open, play, and close a game of Tic Tac Toe using off-chain commitments and on-chain dispute resolution.
+/// @dev Built using EIP-712 signatures for channel operations, this contract allows optimistic game execution while maintaining verifiability and security.
 contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     using LibLogic for *;
     using LibSigUtils for *;
     using SafeCast for *;
 
+    /// @notice Struct representing an active channel instance between two players.
     struct Channel {
-        uint32 expiry;
-        uint184 nonce;
-        uint32 states;
-        uint8 timeout;
+        uint32 expiry; // Timestamp until which the channel is valid
+        uint184 nonce; // Monotonically increasing value to represent moves or state changes
+        uint32 states; // Encoded game board states
+        uint8 timeout; // Time window (in seconds) to allow updates before auto-expiry
     }
 
+    /// @notice Tracks the number of channels created between player pairs.
     mapping(address alice => mapping(address bob => uint256)) public nonces;
+
+    /// @notice Stores channel states indexed by participants and channel ID.
     mapping(address alice => mapping(address bob => mapping(uint256 id => Channel))) public channels;
 
+    /// @notice Emitted when a new channel is opened.
     event Opened(address indexed alice, address indexed bob, uint256 indexed id, uint32 expiry, uint8 timeout);
+
+    /// @notice Emitted when a channel is closed with a final winner.
     event Closed(address indexed alice, address indexed bob, uint256 indexed id, address winner);
+
+    /// @notice Emitted when a new game state is committed to a channel.
     event Committed(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
 
     error UnauthorizedCaller(address caller);
@@ -38,16 +50,25 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error PendingExpiration(uint32 expiry);
     error InvalidNonce(uint184 nonce);
 
+    /// @dev Restricts function access to only the two players involved.
     modifier onlyParticipants(address alice, address bob) {
         require(msg.sender == alice || msg.sender == bob, UnauthorizedCaller(msg.sender));
         _;
     }
 
+    /// @dev Checks if the specified channel exists.
     modifier checkExistence(address alice, address bob, uint256 id) {
         require(id < nonces[alice][bob], InvalidChannel(alice, bob, id));
         _;
     }
 
+    /// @notice Opens a new channel between two players.
+    /// @param alice Player 1 address.
+    /// @param bob Player 2 address.
+    /// @param deadline Signature expiration timestamp.
+    /// @param timeout Number of seconds after which the channel can expire.
+    /// @param r First half of ECDSA signature.
+    /// @param vs Second half of ECDSA signature.
     function open(address alice, address bob, uint256 deadline, uint8 timeout, bytes32 r, bytes32 vs)
         external
         onlyParticipants(alice, bob)
@@ -67,6 +88,13 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Opened(alice, bob, id, expiry, timeout);
     }
 
+    /// @notice Closes an existing channel and declares a winner.
+    /// @param alice Player 1 address.
+    /// @param bob Player 2 address.
+    /// @param id Channel ID.
+    /// @param winner Address of the winner or zero for a tie.
+    /// @param r First half of ECDSA signature.
+    /// @param vs Second half of ECDSA signature.
     function close(address alice, address bob, uint256 id, address winner, bytes32 r, bytes32 vs)
         external
         onlyParticipants(alice, bob)
@@ -90,6 +118,14 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Closed(alice, bob, id, winner);
     }
 
+    /// @notice Commits a new state to a channel.
+    /// @param alice Player 1 address.
+    /// @param bob Player 2 address.
+    /// @param id Channel ID.
+    /// @param nonce State nonce (must increase).
+    /// @param states Encoded board state.
+    /// @param r First half of ECDSA signature.
+    /// @param vs Second half of ECDSA signature.
     function commit(address alice, address bob, uint256 id, uint184 nonce, uint32 states, bytes32 r, bytes32 vs)
         external
         onlyParticipants(alice, bob)
@@ -114,6 +150,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Committed(alice, bob, id, nonce, states);
     }
 
+    /// @notice Returns the expiry timestamp of a channel.
     function getExpiry(address alice, address bob, uint256 id)
         external
         view
@@ -123,6 +160,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         return channels[alice][bob][id].expiry;
     }
 
+    /// @notice Returns the current nonce of a channel.
     function getNonce(address alice, address bob, uint256 id)
         external
         view
@@ -132,6 +170,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         return channels[alice][bob][id].nonce;
     }
 
+    /// @notice Returns the timeout duration of a channel.
     function getTimeout(address alice, address bob, uint256 id)
         external
         view
@@ -141,6 +180,9 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         return channels[alice][bob][id].timeout;
     }
 
+    /// @notice Returns the winner of a concluded game.
+    /// @dev Requires that the channel has expired.
+    /// @return winner Address of winner or zero address for a tie.
     function getWinner(address alice, address bob, uint256 id)
         external
         view
