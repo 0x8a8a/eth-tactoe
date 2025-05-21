@@ -151,10 +151,21 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         // slither-disable-next-line timestamp
         require(channel.expiry < block.timestamp, PendingExpiration(channel.expiry));
 
+        // either close was called or the channel expired after a fresh state was committed (nonce % 10 == 0)
         if (channel.states == 0) return address(0);
-        if (channel.states == 0x01ff0000) return alice;
-        if (channel.states == 0x01ff) return bob;
 
-        return address(0);
+        // channel state is guaranteed to be not empty
+        // if close was called, the winner will be set as a constant
+        // if commit/apply was called, the winner will have to be found
+        (uint256 aliceState, uint256 bobState) = (channel.states >> 16, channel.states & 0xffff);
+        if (aliceState == 0x01ff || aliceState.containsWin()) return alice;
+        if (bobState == 0x01ff || bobState.containsWin()) return bob;
+
+        // the channel expired and neither players' state contains a win
+        // if the last valid move was played (nonce % 10 == 9) we consider this a tie
+        // if a player abandoned the game we set the winner as the account which moved last
+        uint256 turn = channel.nonce % 10;
+        if (turn == 9) return address(0);
+        return (turn % 2 == 0) ? bob : alice;
     }
 }
