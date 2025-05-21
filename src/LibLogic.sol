@@ -8,7 +8,7 @@ import {LibBit} from "solady/utils/LibBit.sol";
 library LibLogic {
     using LibBit for *;
 
-    error LogicError(uint256 errId);
+    error LogicError(uint256 errId); // TODO: document error ids and meanings
 
     /// @dev Inputs `alice` and `bob` MUST be sanitized using the `toUint9` function.
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
