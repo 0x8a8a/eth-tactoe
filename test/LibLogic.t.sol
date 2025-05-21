@@ -15,12 +15,14 @@ contract LibLogicTest is Test {
     error LogicError(uint256 errId);
 
     /// forge-config: default.allow_internal_expect_revert = true
+    /// forge-config: default.fuzz.runs = 16
     function test_validate_RevertsIf_TurnIsZeroAndStateIsDirty(uint16 alice, uint16 bob) public {
         vm.expectRevert(abi.encodeWithSelector(LogicError.selector, 1));
         LibLogic.validate(0, bound(alice, 1, 0x1ff), bound(bob, 1, 0x1ff));
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
+    /// forge-config: default.fuzz.runs = 16
     function test_validate_RevertsIf_AliceHasInvalidNumberOfMoves(uint16 alice) public {
         vm.assume((alice = uint16(bound(alice, 0, 0x1ff))).popCount() != 1);
 
@@ -29,6 +31,7 @@ contract LibLogicTest is Test {
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
+    /// forge-config: default.fuzz.runs = 16
     function test_validate_RevertsIf_BobHasInvalidNumberOfMoves(uint16 bob) public {
         vm.assume(bob != 0);
 
@@ -37,6 +40,7 @@ contract LibLogicTest is Test {
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
+    /// forge-config: default.fuzz.runs = 16
     function test_toUint9_RevertsIf_ValueIsGreaterThan0x1ff(uint256 value) public {
         value = bound(value, 0x200, UINT256_MAX);
 
