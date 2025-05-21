@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.29;
 
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import {LibBit} from "solady/utils/LibBit.sol";
 
 library LibLogic {
@@ -69,5 +71,12 @@ library LibLogic {
         if (state & 0x054 == 0x054) return true; // 0b001010100
         if (state & 0x111 == 0x111) return true; // 0b100010001
         return false;
+    }
+
+    function toUint9(uint256 value) internal pure returns (uint256) {
+        if (value > 0x1ff) {
+            revert SafeCast.SafeCastOverflowedUintDowncast(9, value);
+        }
+        return value;
     }
 }
