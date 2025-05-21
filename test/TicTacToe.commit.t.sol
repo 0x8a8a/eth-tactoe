@@ -56,6 +56,30 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
         assertEq(tictactoe.getWinner(alice, bob, 0), address(0));
     }
 
+    function test_getWinner_ResultsAreAsExpected() public {
+        uint184[5] memory nonces = [uint184(5), uint184(6), uint184(1), uint184(2), uint184(9)];
+        uint32[5] memory states = [0x70018, 0x1810038, 0x10000, 0x10002, 0xf1010e];
+        address[5] memory winners = [alice, bob, alice, bob, address(0)];
+
+        uint256 startTime = block.timestamp;
+        uint256 expiry = tictactoe.getExpiry(alice, bob, 0);
+        for (uint256 i = 0; i < 5; i++) {
+            uint256 snapshotId = vm.snapshotState();
+
+            bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, 0), nonces[i], states[i]).hash();
+            (bytes32 r, bytes32 vs) = vm.signCompact(alicePk, toTypedDataHash(structHash));
+
+            vm.prank(bob);
+            tictactoe.commit(alice, bob, 0, nonces[i], states[i], r, vs);
+
+            vm.warp(expiry + 1);
+            assertEq(tictactoe.getWinner(alice, bob, 0), winners[i]);
+
+            vm.warp(startTime);
+            vm.revertToStateAndDelete(snapshotId);
+        }
+    }
+
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
 
