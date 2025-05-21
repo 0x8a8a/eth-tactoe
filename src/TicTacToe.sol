@@ -99,7 +99,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
         require(nonce >= channel.nonce, InvalidNonce(nonce));
 
-        LibLogic.validate(nonce, states >> 16, states & 0xffff);
+        LibLogic.validate(nonce, LibLogic.toUint9(states >> 16), LibLogic.toUint9(states & 0xffff));
 
         bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, id), nonce, states).hash();
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
