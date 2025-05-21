@@ -15,6 +15,7 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
     error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
     error InvalidNonce(uint184 nonce);
+    error UnauthorizedSigner(address signer);
 
     function setUp() public override {
         super.setUp();
@@ -70,5 +71,17 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.commit(alice, bob, 0, 0, 0, bytes32(0), bytes32(0));
+    }
+
+    function test_RevertsIf_SignerIsUnauthorized(uint256 signerPk) public {
+        vm.assume((signerPk = boundPrivateKey(signerPk)) != alicePk);
+
+        bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, 0), 0, 0).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(signerPk, toTypedDataHash(structHash));
+
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedSigner.selector, vm.addr(signerPk)));
+
+        vm.prank(bob);
+        tictactoe.commit(alice, bob, 0, 0, 0, r, vs);
     }
 }
