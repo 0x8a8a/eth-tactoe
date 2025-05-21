@@ -8,37 +8,28 @@ import {LibBit} from "solady/utils/LibBit.sol";
 library LibLogic {
     using LibBit for *;
 
-    error IndexError(uint256 state);
-
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
-        require(alice < 0x200, IndexError(alice));
-        require(bob < 0x200, IndexError(bob));
-
         uint256 turn = nonce % 10;
         if (turn == 0) {
-            require(alice == 0 && bob == 0); // initial grid state
+            // check the initial state is empty as expected require(alice == 0 && bob == 0); // should be empty
             return;
         }
 
-        // check the individuals number of moves
-        uint256 alicePopCount = alice.popCount();
-        uint256 bobPopCount = bob.popCount();
-        require(alice.popCount() == turn / 2 + turn % 2); // alice moves first
-        require(bob.popCount() == turn / 2); // bob moves second
+        // check the number of moves each player has made is as expected
+        (uint256 aliceLen, uint256 bobLen) = (alice.popCount(), bob.popCount());
+        require(aliceLen == turn / 2 + turn % 2); // should follow pattern [0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+        require(bobLen == turn / 2); // should follow pattern [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
 
-        // check that the whole state is valid both states
-        require(alice & bob == 0); // never intersecting moves
+        // check the players have no intersecting moves
+        require(alice & bob == 0); // should not intersect
 
-        // there can only be one winner
-        bool aliceWon = containsWin(alice);
-        bool bobWon = containsWin(bob);
-        require(!aliceWon || !bobWon); // two winners is invalid
+        // check there is no more than 1 winner
+        (bool aliceWon, bool bobWon) = (containsWin(alice), containsWin(bob));
+        require(!aliceWon || !bobWon); // should be 1 winner at most
 
-        // no extra move for bob after a winning move by alice
-        if (aliceWon) require(bobPopCount == alicePopCount - 1);
-
-        // no extra move for alice after a winning move by bob
-        if (bobWon) require(alicePopCount == bobPopCount);
+        // if a player has won, check the number of moves by the loser is as expected
+        if (aliceWon) require(bobLen == aliceLen - 1); // should be 1 less than alice
+        if (bobWon) require(aliceLen == bobLen); // should be the same as bob
     }
 
     /**
