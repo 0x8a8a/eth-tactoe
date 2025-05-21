@@ -40,6 +40,18 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
         tictactoe.commit(alice, bob, 0, 0, 0, r, vs);
     }
 
+    function test_StateUpdates() public {
+        bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, 0), 10, 0).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(alicePk, toTypedDataHash(structHash));
+
+        vm.prank(bob);
+        tictactoe.commit(alice, bob, 0, 10, 0, r, vs);
+
+        assertEq(tictactoe.getExpiry(alice, bob, 0), block.timestamp + 60);
+        assertEq(tictactoe.getNonce(alice, bob, 0), 10);
+        assertEq(tictactoe.getTimeout(alice, bob, 0), 60); // timeout is unchanged
+    }
+
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
 
