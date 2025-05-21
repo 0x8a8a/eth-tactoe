@@ -11,6 +11,8 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
     using LibSigUtils for *;
     using stdStorage for StdStorage;
 
+    event Committed(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
+
     error UnauthorizedCaller(address caller);
     error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
@@ -25,6 +27,17 @@ contract TicTacToeCommitTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+    }
+
+    function test_EmitsCommittedEvent() public {
+        bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, 0), 0, 0).hash();
+        (bytes32 r, bytes32 vs) = vm.signCompact(bobPk, toTypedDataHash(structHash));
+
+        vm.expectEmit();
+        emit Committed(alice, bob, 0, 0, 0);
+
+        vm.prank(alice);
+        tictactoe.commit(alice, bob, 0, 0, 0, r, vs);
     }
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
