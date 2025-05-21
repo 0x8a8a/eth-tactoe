@@ -157,15 +157,17 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         // channel state is guaranteed to be not empty
         // if close was called, the winner will be set as a constant
         // if commit/apply was called, the winner will have to be found
-        (uint256 aliceState, uint256 bobState) = (channel.states >> 16, channel.states & 0xffff);
+        uint256 aliceState = channel.states >> 16;
         if (aliceState == 0x01ff || aliceState.containsWin()) return alice;
+
+        uint256 bobState = channel.states & 0xffff;
         if (bobState == 0x01ff || bobState.containsWin()) return bob;
 
         // the channel expired and neither players' state contains a win
         // if the last valid move was played (nonce % 10 == 9) we consider this a tie
         // if a player abandoned the game we set the winner as the account which moved last
         uint256 turn = channel.nonce % 10;
-        if (turn == 9) return address(0);
-        return (turn % 2 == 0) ? bob : alice;
+        if (turn != 9) return (turn % 2 == 0) ? bob : alice;
+        return address(0);
     }
 }
