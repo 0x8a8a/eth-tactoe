@@ -8,6 +8,7 @@ import {LibBit} from "solady/utils/LibBit.sol";
 library LibLogic {
     using LibBit for *;
 
+    /// @dev Inputs `alice` and `bob` MUST be sanitized using the `toUint9` function.
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
         uint256 turn = nonce % 10;
         if (turn == 0) {
