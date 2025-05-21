@@ -5,12 +5,29 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {LibBit} from "solady/utils/LibBit.sol";
 
+/// @title LibLogic - Tic Tac Toe Game Logic Library
+/// @notice Provides game validation and win detection for a 2-player Tic Tac Toe state channel.
+/// @dev All inputs representing board state must be sanitized to 9-bit values.
 library LibLogic {
     using LibBit for *;
 
-    error LogicError(uint256 errId); // TODO: document error ids and meanings
+    /// @notice Thrown when the game logic validation fails.
+    /// @dev Refer to the error ID below to understand the failure reason:
+    /// 1 = Initial state must be empty
+    /// 2 = Alice's move count is incorrect
+    /// 3 = Bob's move count is incorrect
+    /// 4 = Players made moves on the same square (overlap)
+    /// 5 = Both players have winning positions simultaneously (invalid)
+    /// 6 = Bob has too many moves after Alice wins
+    /// 7 = Alice has too many moves after Bob wins
+    error LogicError(uint256 errId);
 
-    /// @dev Inputs `alice` and `bob` MUST be sanitized using the `toUint9` function.
+    /// @notice Validates the Tic Tac Toe game state based on nonce and player moves.
+    /// @dev Assumes inputs `alice` and `bob` have been sanitized using `toUint9`.
+    /// Reverts with `LogicError` if the game state is invalid.
+    /// @param nonce Game nonce, determines current turn.
+    /// @param alice Bitboard of Alice's moves (9-bit).
+    /// @param bob Bitboard of Bob's moves (9-bit).
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
         uint256 turn = nonce % 10;
         if (turn == 0) {
@@ -68,6 +85,10 @@ library LibLogic {
         return false;
     }
 
+    /// @notice Converts a uint256 value into a sanitized 9-bit integer.
+    /// @dev Reverts if the input exceeds the range of 9 bits (512).
+    /// @param value The integer to convert.
+    /// @return The input value if it is <= 0x1ff (511).
     function toUint9(uint256 value) internal pure returns (uint256) {
         if (value > 0x1ff) {
             revert SafeCast.SafeCastOverflowedUintDowncast(9, value);
