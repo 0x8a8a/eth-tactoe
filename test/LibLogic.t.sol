@@ -5,15 +5,35 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {Test} from "forge-std/Test.sol";
 
+import {LibBit} from "solady/utils/LibBit.sol";
+
 import {LibLogic} from "src/LibLogic.sol";
 
 contract LibLogicTest is Test {
+    using LibBit for *;
+
     error LogicError(uint256 errId);
 
     /// forge-config: default.allow_internal_expect_revert = true
     function test_validate_RevertsIf_TurnIsZeroAndStateIsDirty(uint16 alice, uint16 bob) public {
         vm.expectRevert(abi.encodeWithSelector(LogicError.selector, 1));
         LibLogic.validate(0, bound(alice, 1, 0x1ff), bound(bob, 1, 0x1ff));
+    }
+
+    /// forge-config: default.allow_internal_expect_revert = true
+    function test_validate_RevertsIf_AliceHasInvalidNumberOfMoves(uint16 alice) public {
+        vm.assume((alice = uint16(bound(alice, 0, 0x1ff))).popCount() != 1);
+
+        vm.expectRevert(abi.encodeWithSelector(LogicError.selector, 2));
+        LibLogic.validate(1, alice, 0);
+    }
+
+    /// forge-config: default.allow_internal_expect_revert = true
+    function test_validate_RevertsIf_BobHasInvalidNumberOfMoves(uint16 bob) public {
+        vm.assume(bob != 0);
+
+        vm.expectRevert(abi.encodeWithSelector(LogicError.selector, 3));
+        LibLogic.validate(1, 1, bob);
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
