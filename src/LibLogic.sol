@@ -8,29 +8,32 @@ import {LibBit} from "solady/utils/LibBit.sol";
 library LibLogic {
     using LibBit for *;
 
+    error LogicError(uint256 errId);
+
     /// @dev Inputs `alice` and `bob` MUST be sanitized using the `toUint9` function.
     function validate(uint256 nonce, uint256 alice, uint256 bob) internal pure {
         uint256 turn = nonce % 10;
         if (turn == 0) {
-            // check the initial state is empty as expected require(alice == 0 && bob == 0); // should be empty
+            // check the initial state is empty as expected
+            require(alice == 0 && bob == 0, LogicError(1)); // should be empty
             return;
         }
 
         // check the number of moves each player has made is as expected
         (uint256 aliceLen, uint256 bobLen) = (alice.popCount(), bob.popCount());
-        require(aliceLen == turn / 2 + turn % 2); // should follow pattern [0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
-        require(bobLen == turn / 2); // should follow pattern [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
+        require(aliceLen == turn / 2 + turn % 2, LogicError(2)); // should follow pattern [0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+        require(bobLen == turn / 2, LogicError(3)); // should follow pattern [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
 
         // check the players have no intersecting moves
-        require(alice & bob == 0); // should not intersect
+        require(alice & bob == 0, LogicError(4)); // should not intersect
 
         // check there is no more than 1 winner
         (bool aliceWon, bool bobWon) = (containsWin(alice), containsWin(bob));
-        require(!aliceWon || !bobWon); // should be 1 winner at most
+        require(!aliceWon || !bobWon, LogicError(5)); // should be 1 winner at most
 
         // if a player has won, check the number of moves by the loser is as expected
-        if (aliceWon) require(bobLen == aliceLen - 1); // should be 1 less than alice
-        if (bobWon) require(aliceLen == bobLen); // should be the same as bob
+        if (aliceWon) require(bobLen == aliceLen - 1, LogicError(6)); // should be 1 less than alice
+        if (bobWon) require(aliceLen == bobLen, LogicError(7)); // should be the same as bob
     }
 
     /**
