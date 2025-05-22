@@ -150,6 +150,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Committed(alice, bob, id, nonce, states);
     }
 
+    function update(address alice, address bob, uint256 id, uint16 state)
+        external
+        onlyParticipants(alice, bob)
+        checkExistence(alice, bob, id)
+    {}
+
     /// @notice Returns the expiry timestamp of a channel.
     function getExpiry(address alice, address bob, uint256 id)
         external
