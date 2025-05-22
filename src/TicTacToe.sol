@@ -154,7 +154,11 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         external
         onlyParticipants(alice, bob)
         checkExistence(alice, bob, id)
-    {}
+    {
+        Channel memory channel = channels[alice][bob][id];
+        // slither-disable-next-line timestamp
+        require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
+    }
 
     /// @notice Returns the expiry timestamp of a channel.
     function getExpiry(address alice, address bob, uint256 id)
