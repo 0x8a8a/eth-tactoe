@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.29;
 
+import {StdStorage, stdStorage} from "forge-std/Test.sol";
+
 import {TicTacToeBaseTest} from "test/TicTacToe.t.sol";
 
 import {LibSigUtils} from "src/LibSigUtils.sol";
 
 contract TicTacToeUpdateTest is TicTacToeBaseTest {
     using LibSigUtils for *;
+    using stdStorage for StdStorage;
 
     error UnauthorizedCaller(address caller);
     error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
+    error InvalidStateTransition(uint16 state);
 
     function setUp() public override {
         super.setUp();
@@ -53,5 +57,37 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
 
         vm.prank(bob);
         tictactoe.update(alice, bob, 0, 1);
+    }
+
+    function test_RevertsIf_StateAgumentIsNotAValidSuperSet() public {
+        // forgefmt: disable-next-item
+        stdstore
+            .enable_packed_slots()
+            .target(address(tictactoe))
+            .sig("getNonce(address,address,uint256)")
+            .with_key(alice)
+            .with_key(bob)
+            .with_key(uint256(0))
+            .checked_write(2);
+
+        // forgefmt: disable-next-item
+        stdstore
+            .enable_packed_slots()
+            .target(address(tictactoe))
+            .sig("channels(address,address,uint256)")
+            .with_key(alice)
+            .with_key(bob)
+            .with_key(uint256(0))
+            .depth(2)
+            .checked_write(0x00010002);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidStateTransition.selector, 0x000c));
+
+        vm.prank(alice);
+        // alice prevState = 0b000000001, newState = 0b000001100
+        // if she makes extra moves LibLogic.validate will catch it
+        // on first moves, prevState = 0x0, and therefore will always pass
+        // they can make any move
+        tictactoe.update(alice, bob, 0, 0x000c);
     }
 }
