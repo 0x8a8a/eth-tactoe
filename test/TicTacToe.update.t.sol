@@ -47,4 +47,11 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
         vm.prank(alice);
         tictactoe.update(alice, bob, 0, 0);
     }
+
+    function test_RevertsIf_CallerIsOutOfTurn() public {
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedCaller.selector, bob));
+
+        vm.prank(bob);
+        tictactoe.update(alice, bob, 0, 1);
+    }
 }
