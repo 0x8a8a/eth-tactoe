@@ -10,6 +10,7 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
 
     error UnauthorizedCaller(address caller);
     error InvalidChannel(address alice, address bob, uint256 id);
+    error ExpiredChannel(uint32 expiry);
 
     function setUp() public override {
         super.setUp();
@@ -35,5 +36,15 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.update(alice, bob, 1, 0);
+    }
+
+    function test_RevertsIf_ChannelHasExpired() public {
+        uint32 expiry = tictactoe.getExpiry(alice, bob, 0);
+        vm.warp(expiry + 1);
+
+        vm.expectRevert(abi.encodeWithSelector(ExpiredChannel.selector, expiry));
+
+        vm.prank(alice);
+        tictactoe.update(alice, bob, 0, 0);
     }
 }
