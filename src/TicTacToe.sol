@@ -49,7 +49,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     error InvalidWinner(address winner);
     error PendingExpiration(uint32 expiry);
     error InvalidNonce(uint184 nonce);
-    error InvalidStateTransition(uint16 state);
+    error InvalidStateTransition(uint32 prevState, uint32 newState);
 
     /// @dev Restricts function access to only the two players involved.
     modifier onlyParticipants(address alice, address bob) {
@@ -151,17 +151,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Committed(alice, bob, id, nonce, states);
     }
 
-    function update(address alice, address bob, uint256 id, uint16 state) external checkExistence(alice, bob, id) {
+    function update(address alice, address bob, uint256 id, uint32 states) external checkExistence(alice, bob, id) {
         Channel memory channel = channels[alice][bob][id];
         // slither-disable-next-line timestamp
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
-
-        uint256 turn = ++channel.nonce % 10;
-        require(msg.sender == (turn % 2 == 0 ? bob : alice), UnauthorizedCaller(msg.sender));
-
-        // state MUST be a valid superset of prevState
-        uint32 prevState = msg.sender == alice ? channel.states >> 16 : channel.states & 0xffff;
-        require(prevState & state == prevState, InvalidStateTransition(state));
+        require(msg.sender == (++channel.nonce % 10 % 2 == 0 ? bob : alice), UnauthorizedCaller(msg.sender));
+        require(channel.states & states == channel.states, InvalidStateTransition(channel.states, states));
     }
 
     /// @notice Returns the expiry timestamp of a channel.
