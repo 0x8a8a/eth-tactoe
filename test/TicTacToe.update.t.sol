@@ -11,6 +11,8 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
     using LibSigUtils for *;
     using stdStorage for StdStorage;
 
+    event Updated(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
+
     error UnauthorizedCaller(address caller);
     error InvalidChannel(address alice, address bob, uint256 id);
     error ExpiredChannel(uint32 expiry);
@@ -24,6 +26,14 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
 
         vm.prank(alice);
         tictactoe.open(alice, bob, UINT256_MAX, 60, r, vs);
+    }
+
+    function test_EmitsUpdatedEvent() public {
+        vm.expectEmit();
+        emit Updated(alice, bob, 0, 1, 0x00010000);
+
+        vm.prank(alice);
+        tictactoe.update(alice, bob, 0, 0x00010000);
     }
 
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
