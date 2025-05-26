@@ -40,6 +40,8 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     /// @notice Emitted when a new game state is committed to a channel.
     event Committed(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
 
+    event Updated(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
+
     error UnauthorizedCaller(address caller);
     error ExpiredSignature(uint256 deadline);
     error InvalidTimeout(uint8 timeout);
@@ -157,6 +159,14 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         require(block.timestamp <= channel.expiry, ExpiredChannel(channel.expiry));
         require(msg.sender == (++channel.nonce % 10 % 2 == 0 ? bob : alice), UnauthorizedCaller(msg.sender));
         require(channel.states & states == channel.states, InvalidStateTransition(channel.states, states));
+
+        LibLogic.validate(channel.nonce, (states >> 16).toUint9(), (states & 0xffff).toUint9());
+
+        channel.expiry = (block.timestamp + channel.timeout).toUint32();
+        channel.states = states;
+
+        channels[alice][bob][id] = channel;
+        emit Updated(alice, bob, id, channel.nonce, states);
     }
 
     /// @notice Returns the expiry timestamp of a channel.
