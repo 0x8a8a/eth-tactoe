@@ -36,6 +36,21 @@ contract TicTacToeUpdateTest is TicTacToeBaseTest {
         tictactoe.update(alice, bob, 0, 0x00010000);
     }
 
+    function test_StateUpdates() public {
+        skip(30);
+
+        vm.prank(alice);
+        tictactoe.update(alice, bob, 0, 0x00010000);
+
+        uint32 expiry = tictactoe.getExpiry(alice, bob, 0);
+        assertEq(expiry, block.timestamp + 60);
+        assertEq(tictactoe.getNonce(alice, bob, 0), 1);
+        assertEq(tictactoe.getTimeout(alice, bob, 0), 60); // timeout is unchanged
+
+        vm.warp(expiry + 1);
+        assertEq(tictactoe.getWinner(alice, bob, 0), alice);
+    }
+
     function testFuzz_RevertsIf_CallerIsUnauthorized(address caller) public {
         vm.assume(caller != alice && caller != bob);
 
