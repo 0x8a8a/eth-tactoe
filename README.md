@@ -51,12 +51,21 @@ forge test --gas-report
 
 ```txt
 src/
-  ├── TicTacToe.sol        # Main contract
-  ├── LibLogic.sol         # Game rules and validation
-  ├── LibSigUtils.sol      # EIP-712 struct hashing helpers
+  ├── TicTacToe.sol                # Main contract
+  ├── LibLogic.sol                 # Game rules and validation
+  ├── LibSigUtils.sol              # EIP-712 struct hashing helpers
 
 test/
-  ├── TicTacToe.t.sol      # Foundry tests
+  ├── TicTacToe.t.sol              # Base test contract (common setup & utilities)
+  ├── TicTacToe.open.t.sol         # Tests for opening a game
+  ├── TicTacToe.commit.t.sol       # Tests for committing a game state
+  ├── TicTacToe.update.t.sol       # Tests for updating game state
+  ├── TicTacToe.close.t.sol        # Tests for closing a game
+  ├── TicTacToe.getExpiry.t.sol    # Tests for getExpiry view utility
+  ├── TicTacToe.getNonce.t.sol     # Tests for getNonce view utility
+  ├── TicTacToe.getTimeout.t.sol   # Tests for getTimeout view utility
+  ├── TicTacToe.getWinner.t.sol    # Tests for winner determination logic
+  ├── LibLogic.t.sol               # Unit tests for game logic
 ```
 
 ## 🔐 Security Assumptions
