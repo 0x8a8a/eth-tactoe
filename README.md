@@ -67,7 +67,7 @@ test/
 
 ## 📜 License
 
-[Unlicense](LICENSE) — open and public domain.
+[Unlicense](UNLICENSE) — open and public domain.
 
 ## 🤝 Contributing
 
