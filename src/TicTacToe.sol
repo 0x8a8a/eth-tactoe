@@ -40,17 +40,50 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
     /// @notice Emitted when a new game state is committed to a channel.
     event Committed(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
 
+    /// @notice Emitted when a channel's state is updated.
     event Updated(address indexed alice, address indexed bob, uint256 indexed id, uint184 nonce, uint32 states);
 
+    /// @dev Thrown when the caller is not authorized to perform the action.
+    /// @param caller The address that attempted the unauthorized call.
     error UnauthorizedCaller(address caller);
+
+    /// @dev Thrown when a signature has expired based on its deadline.
+    /// @param deadline The timestamp after which the signature is considered expired.
     error ExpiredSignature(uint256 deadline);
+
+    /// @dev Thrown when an invalid timeout value is provided.
+    /// @param timeout The timeout value that is not acceptable.
     error InvalidTimeout(uint8 timeout);
+
+    /// @dev Thrown when a signature is from an unauthorized signer.
+    /// @param signer The address of the unauthorized signer.
     error UnauthorizedSigner(address signer);
+
+    /// @dev Thrown when a channel does not exist.
+    /// @param alice The address of player Alice.
+    /// @param bob The address of player Bob.
+    /// @param id The channel ID that was deemed invalid.
     error InvalidChannel(address alice, address bob, uint256 id);
+
+    /// @dev Thrown when a channel has already expired and is no longer active.
+    /// @param expiry The expiration timestamp of the channel.
     error ExpiredChannel(uint32 expiry);
+
+    /// @dev Thrown when a winner address is not valid (e.g. not a participant).
+    /// @param winner The address that was claimed to have won.
     error InvalidWinner(address winner);
+
+    /// @dev Thrown when an operation is attempted before the expiration time.
+    /// @param expiry The timestamp indicating the pending expiration.
     error PendingExpiration(uint32 expiry);
+
+    /// @dev Thrown when a state update has a nonce that is not higher than the current.
+    /// @param nonce The provided nonce that was invalid.
     error InvalidNonce(uint184 nonce);
+
+    /// @dev Thrown when a new state does not validly follow from the previous state.
+    /// @param prevState The previous state before the transition.
+    /// @param newState The attempted new state that is invalid.
     error InvalidStateTransition(uint32 prevState, uint32 newState);
 
     /// @dev Restricts function access to only the two players involved.
