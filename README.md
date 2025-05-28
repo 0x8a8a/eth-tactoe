@@ -13,6 +13,7 @@ A fully on-chain Tic-Tac-Toe implementation built using **state channels**, **EI
 ## 🛠 Requirements
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- [Python](https://wiki.python.org/moin/BeginnersGuide/Download)
 
 ## 🚀 Getting Started
 
@@ -20,6 +21,15 @@ A fully on-chain Tic-Tac-Toe implementation built using **state channels**, **EI
 git clone https://github.com/0x8a8a/eth-tactoe.git
 cd eth-tactoe
 forge install
+```
+
+### 🔧 Python Environment Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # use .venv/Scripts/activate on Windows
+pip install -r requirements.txt
+pre-commit install
 ```
 
 ## 🧪 Running Tests
@@ -32,6 +42,12 @@ For gas reports:
 
 ```bash
 forge test --gas-report
+```
+
+### 🔍 Run Static Analysis
+
+```bash
+slither .
 ```
 
 ## 🧩 Contract Overview
