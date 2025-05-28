@@ -186,6 +186,12 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         emit Committed(alice, bob, id, nonce, states);
     }
 
+    /// @notice Updates the state of an existing Tic Tac Toe channel with a new valid state.
+    /// @dev Validates the caller, state transition logic, and enforces turn order.
+    /// @param alice The address of player Alice in the channel.
+    /// @param bob The address of player Bob in the channel.
+    /// @param id The unique identifier of the channel.
+    /// @param states The new compressed representation of the game state.
     function update(address alice, address bob, uint256 id, uint32 states) external checkExistence(alice, bob, id) {
         Channel memory channel = channels[alice][bob][id];
         // slither-disable-next-line timestamp
