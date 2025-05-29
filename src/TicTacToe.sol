@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.29;
 
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {EIP712} from "solady/utils/EIP712.sol";
+import {Multicallable} from "solady/utils/Multicallable.sol";
+import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
 import {LibLogic} from "src/LibLogic.sol";
 import {LibSigUtils} from "src/LibSigUtils.sol";
@@ -12,10 +12,10 @@ import {LibSigUtils} from "src/LibSigUtils.sol";
 /// @title TicTacToe - A State Channel-based Tic-Tac-Toe Game
 /// @notice This contract enables players to open, play, and close a game of Tic Tac Toe using off-chain commitments and on-chain dispute resolution.
 /// @dev Built using EIP-712 signatures for channel operations, this contract allows optimistic game execution while maintaining verifiability and security.
-contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
+contract TicTacToe is EIP712, Multicallable {
     using LibLogic for *;
     using LibSigUtils for *;
-    using SafeCast for *;
+    using SafeCastLib for *;
 
     /// @notice Struct representing an active channel instance between two players.
     struct Channel {
@@ -115,7 +115,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
 
         uint256 id = nonces[alice][bob]++;
         bytes32 structHash = LibSigUtils.Open(LibSigUtils.Channel(alice, bob, id), deadline, timeout).hash();
-        address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
+        address signer = ECDSA.recover(_hashTypedData(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
         uint32 expiry = (block.timestamp + timeout).toUint32();
@@ -143,7 +143,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         require(winner == address(0) || winner == alice || winner == bob, InvalidWinner(winner));
 
         bytes32 structHash = LibSigUtils.Close(LibSigUtils.Channel(alice, bob, id), winner).hash();
-        address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
+        address signer = ECDSA.recover(_hashTypedData(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
         (channel.expiry, channel.states) = (0, 0);
@@ -175,7 +175,7 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         LibLogic.validate(nonce, (states >> 16).toUint9(), (states & 0xffff).toUint9());
 
         bytes32 structHash = LibSigUtils.Commit(LibSigUtils.Channel(alice, bob, id), nonce, states).hash();
-        address signer = ECDSA.recover(_hashTypedDataV4(structHash), r, vs);
+        address signer = ECDSA.recover(_hashTypedData(structHash), r, vs);
         require(signer == (msg.sender == alice ? bob : alice), UnauthorizedSigner(signer));
 
         channel.expiry = (block.timestamp + channel.timeout).toUint32();
@@ -269,5 +269,10 @@ contract TicTacToe is EIP712("Tic-Tac-Toe", "1"), Multicall {
         uint256 turn = channel.nonce % 10;
         if (turn != 9) return (turn % 2 == 0) ? bob : alice;
         return address(0);
+    }
+
+    function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
+        name = "Tic-Tac-Toe";
+        version = "1";
     }
 }
