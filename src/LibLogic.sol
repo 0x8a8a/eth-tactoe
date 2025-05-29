@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.29;
 
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-
 import {LibBit} from "solady/utils/LibBit.sol";
+import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
 /// @title LibLogic - Tic Tac Toe Game Logic Library
 /// @notice Provides game validation and win detection for a 2-player Tic Tac Toe state channel.
@@ -90,9 +89,7 @@ library LibLogic {
     /// @param value The integer to convert.
     /// @return The input value if it is <= 0x1ff (511).
     function toUint9(uint256 value) internal pure returns (uint256) {
-        if (value > 0x1ff) {
-            revert SafeCast.SafeCastOverflowedUintDowncast(9, value);
-        }
+        if (value > 0x1ff) revert SafeCastLib.Overflow();
         return value;
     }
 }
