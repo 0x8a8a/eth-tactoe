@@ -1,6 +1,6 @@
 # Tic-Tac-Toe - A State Channel-Based Game on Ethereum
 
-A fully on-chain Tic-Tac-Toe implementation built using **state channels**, **EIP-712 signatures**, and **optimistic updates**. This contract allows two players to open a channel, play off-chain using signed messages, and only settle disputes or finalize the outcome on-chain — ensuring low gas usage and verifiable integrity.
+A Tic-Tac-Toe implementation built using **state channels**, **EIP-712 signatures**, and **optimistic updates**. This contract allows two players to open a channel, play off-chain using signed messages, and only settle disputes or finalize the outcome on-chain — ensuring low gas usage and verifiable integrity.
 
 ## ✨ Features
 
